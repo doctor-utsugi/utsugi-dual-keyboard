@@ -1,3 +1,23 @@
+# Utsugi Dual Keyboard
+
+> **This is a fork of [RuneBoard](https://github.com/JoelMomo/RuneBoard) by JoelMomo.** All the
+> keyboard, its controller support and its dual-screen work come from RuneBoard; this fork only
+> adds the changes below. Everything after the next section is RuneBoard's own README.
+
+## What this fork changes
+
+- **Light theme**: white keys with dark lettering, mid-grey function keys with dark text, and no
+  header strip, so the keys take the whole height. Pick it under Appearance → Theme.
+- **⇅ key** at the right end of the top row moves the keyboard between the Thor's screens. It
+  writes AYN's `ime_fixed` / `ime_show_on_second` system settings, which Android refuses to apps,
+  so it needs **root** (it runs `settings put` through `su`), then restarts the keyboard so the
+  system places it on the other screen. The opacity key it replaces stays in EDIT mode.
+- **On the main (upper) screen** the keyboard takes at most 60% of the height, so the app stays
+  visible, and keeps its keys clear of the navigation bar.
+- **Key clicks** play at 8% of the system click volume.
+
+---
+
 # RuneBoard
 
 [![Android CI](https://github.com/JoelMomo/RuneBoard/actions/workflows/android.yml/badge.svg)](https://github.com/JoelMomo/RuneBoard/actions/workflows/android.yml) [![Apps & tools](https://img.shields.io/badge/Apps%20%26%20tools-Browse-6F8F72?style=flat-square)](https://joelmomo.github.io/)

@@ -122,7 +122,7 @@ public final class KeyboardEngineTest {
                 255,
                 Locale.US);
 
-        engine.getState().select(0, 8);
+        engine.getState().select(0, 7);
         assertEquals(
                 KeyboardEngine.Update.GEOMETRY,
                 engine.pressSelected());
@@ -244,11 +244,15 @@ public final class KeyboardEngineTest {
         RecordingOutput output = new RecordingOutput();
         KeyboardEngine engine =
                 new KeyboardEngine(
-                        KeyboardLayouts.qwerty(),
+                        KeyboardLayouts.editorLayout(),
                         output,
                         85);
 
-        engine.getState().select(0, 6);
+        // The opacity key lives in the editor's last row, beside EDIT
+        KeyboardLayout editor = KeyboardLayouts.editorLayout();
+        int lastRow = editor.getRowCount() - 1;
+        assertEquals(KeyboardKey.Type.OPACITY, editor.getKey(lastRow, 1).getType());
+        engine.getState().select(lastRow, 1);
         assertEquals(85, engine.getState().getOpacity());
 
         assertEquals(

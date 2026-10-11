@@ -517,6 +517,24 @@ public final class RuneBoardImeService extends InputMethodService
     preferences.setBackgroundOpacity(opacity);
   }
 
+  @Override
+  public void onSwitchScreen() {
+    // su may ask for permission the first time: never wait for it on the main thread
+    new Thread(
+            () -> {
+              if (!ScreenSwitcher.toggle(this)) {
+                return;
+              }
+              // AYN places the IME window on its screen when the service is bound:
+              // restart the process so Android binds it again on the new screen.
+              new Handler(Looper.getMainLooper())
+                  .postDelayed(
+                      () -> android.os.Process.killProcess(android.os.Process.myPid()), 150);
+            },
+            "RuneBoard-screen")
+        .start();
+  }
+
   private void ensureSuggestionSource(KeyboardProfile profile) {
     if (!preferences.areSuggestionsEnabled()) {
       closeSuggestionSource();

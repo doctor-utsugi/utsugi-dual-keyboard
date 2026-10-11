@@ -12,7 +12,8 @@ public final class KeyboardKey {
         BACKSPACE,
         ENTER,
         OPACITY,
-        MINIMIZE
+        MINIMIZE,
+        SCREEN
     }
 
     private final Type type;

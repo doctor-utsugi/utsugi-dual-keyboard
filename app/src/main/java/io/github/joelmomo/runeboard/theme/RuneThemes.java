@@ -5,6 +5,7 @@ public final class RuneThemes {
     public static final String ID_DEFAULT = "default";
     public static final String ID_OLED = "oled";
     public static final String ID_TRANSPARENT = "transparent";
+    public static final String ID_LIGHT = "light";
     public static final String ID_CUSTOM = "custom";
 
     private RuneThemes() {
@@ -52,6 +53,29 @@ public final class RuneThemes {
                 6f,
                 12f,
                 38f);
+    }
+
+    public static KeyboardTheme lightTheme() {
+        return new KeyboardTheme(
+                ID_LIGHT,
+                255,
+                0xFFE8EAED,
+                0xFFDADCE0,
+                0xFFFFFFFF,
+                0xFFBDC1C6,
+                0xFF1A73E8,
+                0xFF8AB4F8,
+                contentFor(0xFF1A73E8),
+                0xFF202124,
+                0xFF3C4043,
+                0xFF1A73E8,
+                255,
+                255,
+                6f,
+                6f,
+                10f,
+                0f,
+                true);
     }
 
     public static KeyboardTheme transparentTheme() {
@@ -107,6 +131,9 @@ public final class RuneThemes {
         if (ID_TRANSPARENT.equals(id)) {
             return transparentTheme();
         }
+        if (ID_LIGHT.equals(id)) {
+            return lightTheme();
+        }
         if (ID_CUSTOM.equals(id)) {
             return customTheme(CustomThemeConfig.defaults());
         }
@@ -116,6 +143,7 @@ public final class RuneThemes {
     public static String normalizeId(String id) {
         if (ID_OLED.equals(id)
                 || ID_TRANSPARENT.equals(id)
+                || ID_LIGHT.equals(id)
                 || ID_CUSTOM.equals(id)) {
             return id;
         }

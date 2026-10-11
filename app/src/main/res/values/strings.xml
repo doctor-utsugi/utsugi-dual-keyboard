@@ -59,6 +59,8 @@
     <string name="theme_oled_subtitle">Pure black</string>
     <string name="theme_transparent_title">Transparent</string>
     <string name="theme_transparent_subtitle">See the app below</string>
+    <string name="theme_light_title">Light</string>
+    <string name="theme_light_subtitle">Classic light keys, plain header</string>
     <string name="theme_custom_title">Custom</string>
     <string name="theme_custom_subtitle">Your colors and geometry</string>
     <string name="custom_theme_title">Custom style</string>
@@ -111,6 +113,7 @@
     <string name="key_previous">PREV</string>
     <string name="key_opacity">BG %1$d%%</string>
     <string name="key_minimize">MIN</string>
+    <string name="key_screen">⇅</string>
     <string name="header_title" translatable="false">RUNEBOARD</string>
     <string name="header_controller" translatable="false">D-PAD</string>
     <string name="header_background">BG %1$d%%</string>

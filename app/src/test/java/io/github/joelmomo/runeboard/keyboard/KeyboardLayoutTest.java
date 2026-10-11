@@ -42,11 +42,11 @@ public final class KeyboardLayoutTest {
                 layout.getKey(0, 4).getCommand());
         assertEquals(EditorCommand.REDO,
                 layout.getKey(0, 5).getCommand());
-        assertEquals(KeyboardKey.Type.OPACITY,
-                layout.getKey(0, 6).getType());
         assertEquals(KeyboardKey.Type.MINIMIZE,
-                layout.getKey(0, 7).getType());
+                layout.getKey(0, 6).getType());
         assertEquals(KeyboardKey.Type.EDIT,
+                layout.getKey(0, 7).getType());
+        assertEquals(KeyboardKey.Type.SCREEN,
                 layout.getKey(0, 8).getType());
     }
 

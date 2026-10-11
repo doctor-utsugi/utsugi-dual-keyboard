@@ -196,9 +196,9 @@ public final class KeyboardLayouts {
                 command(EditorCommand.PASTE, "PASTE", 1.25f),
                 command(EditorCommand.UNDO, "UNDO", 1f),
                 command(EditorCommand.REDO, "REDO", 1f),
-                KeyboardKey.action(KeyboardKey.Type.OPACITY, 1f),
                 KeyboardKey.action(KeyboardKey.Type.MINIMIZE, 1f),
-                KeyboardKey.action(KeyboardKey.Type.EDIT, 1f));
+                KeyboardKey.action(KeyboardKey.Type.EDIT, 1f),
+                KeyboardKey.action(KeyboardKey.Type.SCREEN, 1f));
     }
 
     private static List<KeyboardKey> symbolActionKeys() {

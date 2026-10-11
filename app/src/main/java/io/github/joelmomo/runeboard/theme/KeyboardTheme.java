@@ -20,6 +20,11 @@ public final class KeyboardTheme {
     public final float keyGapDp;
     public final float keyRadiusDp;
     public final float headerHeightDp;
+    /**
+     * Header shows only suggestions: no title, no controller and opacity labels, no panel. With
+     * no header height there is no header at all.
+     */
+    public final boolean plainHeader;
 
     public KeyboardTheme(
             String id,
@@ -40,6 +45,47 @@ public final class KeyboardTheme {
             float keyGapDp,
             float keyRadiusDp,
             float headerHeightDp) {
+        this(id,
+                defaultBackgroundOpacity,
+                backgroundTop,
+                backgroundBottom,
+                keyFill,
+                utilityKeyFill,
+                selectedFill,
+                selectedStroke,
+                selectedContent,
+                textPrimary,
+                textSecondary,
+                accent,
+                keyAlpha,
+                utilityKeyAlpha,
+                outerMarginDp,
+                keyGapDp,
+                keyRadiusDp,
+                headerHeightDp,
+                false);
+    }
+
+    public KeyboardTheme(
+            String id,
+            int defaultBackgroundOpacity,
+            int backgroundTop,
+            int backgroundBottom,
+            int keyFill,
+            int utilityKeyFill,
+            int selectedFill,
+            int selectedStroke,
+            int selectedContent,
+            int textPrimary,
+            int textSecondary,
+            int accent,
+            int keyAlpha,
+            int utilityKeyAlpha,
+            float outerMarginDp,
+            float keyGapDp,
+            float keyRadiusDp,
+            float headerHeightDp,
+            boolean plainHeader) {
         this.id = id;
         this.defaultBackgroundOpacity =
                 BackgroundOpacity.normalize(defaultBackgroundOpacity);
@@ -59,5 +105,6 @@ public final class KeyboardTheme {
         this.keyGapDp = keyGapDp;
         this.keyRadiusDp = keyRadiusDp;
         this.headerHeightDp = headerHeightDp;
+        this.plainHeader = plainHeader;
     }
 }

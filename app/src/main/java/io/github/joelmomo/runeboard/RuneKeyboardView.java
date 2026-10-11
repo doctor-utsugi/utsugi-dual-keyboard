@@ -88,6 +88,10 @@ public final class RuneKeyboardView extends View {
   private final AxisNavigationPolicy axisNavigationPolicy = new AxisNavigationPolicy();
   private final KeyboardProfile profile;
   private final AudioManager audioManager;
+  /** Relative volume of key clicks: a faint tick rather than the system's full click */
+  private static final float KEY_SOUND_VOLUME = 0.08f;
+  /** Most of the main screen the keyboard may take, leaving the rest to the app */
+  private static final float MAIN_SCREEN_SHARE = 0.6f;
   private final Typeface keyboardTypeface;
   private final Typeface keyboardTypefaceBold;
   private final int keyTextColor;
@@ -268,6 +272,13 @@ public final class RuneKeyboardView extends View {
                   listener.onBackgroundOpacityChanged(opacity);
                 }
               }
+
+              @Override
+              public void onSwitchScreen() {
+                if (listener != null) {
+                  listener.onSwitchScreen();
+                }
+              }
             },
             initialOpacity,
             profile.locale);
@@ -339,9 +350,21 @@ public final class RuneKeyboardView extends View {
     int availableHeight = MeasureSpec.getSize(heightMeasureSpec);
 
     int desiredHeight = engine.getState().isMinimized() ? dp(58) : availableHeight;
+    android.view.Display display = getDisplay();
+    if (display != null && display.getDisplayId() == android.view.Display.DEFAULT_DISPLAY) {
+      int screenHeight = getResources().getDisplayMetrics().heightPixels;
+      desiredHeight = Math.min(desiredHeight, Math.round(screenHeight * MAIN_SCREEN_SHARE));
+    }
 
     setMeasuredDimension(
         resolveSize(width, widthMeasureSpec), resolveSize(desiredHeight, heightMeasureSpec));
+  }
+
+  @Override
+  protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
+    super.onLayout(changed, left, top, right, bottom);
+    // Where the window sits decides how much of it the navigation bar covers
+    rebuildGeometry(getWidth(), getHeight());
   }
 
   @Override
@@ -359,7 +382,27 @@ public final class RuneKeyboardView extends View {
     rebuildGeometry(width, height);
   }
 
+  /** On the main screen the system navigation bar covers part of the keyboard's bottom edge */
+  private int mainScreenBottomInset() {
+    android.view.Display display = getDisplay();
+    WindowInsets insets = getRootWindowInsets();
+    if (display == null
+        || display.getDisplayId() != android.view.Display.DEFAULT_DISPLAY
+        || insets == null
+        || getHeight() <= 0) {
+      return 0;
+    }
+    int navigationBar = insets.getInsets(WindowInsets.Type.navigationBars()).bottom;
+    android.graphics.Point screen = new android.graphics.Point();
+    display.getRealSize(screen);
+    int[] location = new int[2];
+    getLocationOnScreen(location);
+    int covered = location[1] + getHeight() - (screen.y - navigationBar);
+    return Math.max(0, Math.min(covered, navigationBar));
+  }
+
   private void rebuildGeometry(int width, int height) {
+    height -= mainScreenBottomInset();
     hitTargets.clear();
     languageTarget.setEmpty();
 
@@ -372,8 +415,10 @@ public final class RuneKeyboardView extends View {
     float outer = dp(theme.outerMarginDp);
     float gap = dp(theme.keyGapDp);
     float headerHeight = dp(theme.headerHeightDp);
-    languageTarget.set(
-        outer, outer, Math.min(width * 0.46f, outer + dp(285)), outer + headerHeight);
+    if (!theme.plainHeader) {
+      languageTarget.set(
+          outer, outer, Math.min(width * 0.46f, outer + dp(285)), outer + headerHeight);
+    }
     float contentTop = outer + headerHeight + gap;
     float rowGaps = gap * (layout.getRowCount() - 1);
     // Keep the utility row at the top, then shift the typing block
@@ -459,6 +504,12 @@ public final class RuneKeyboardView extends View {
     KeyboardState state = engine.getState();
     float outer = dp(theme.outerMarginDp);
     float headerHeight = dp(theme.headerHeightDp);
+    if (theme.plainHeader) {
+      if (headerHeight > 0 && !state.isEditing() && !suggestions.isEmpty()) {
+        drawSuggestions(canvas, outer, headerHeight);
+      }
+      return;
+    }
     drawHeaderSurface(canvas, outer, headerHeight);
 
     float badge = dp(23);
@@ -549,7 +600,8 @@ public final class RuneKeyboardView extends View {
 
   private void drawSuggestions(Canvas canvas, float outer, float headerHeight) {
     int count = Math.min(3, suggestions.size());
-    float left = Math.max(languageTarget.right + dp(10), getWidth() * 0.48f);
+    float left =
+        theme.plainHeader ? outer : Math.max(languageTarget.right + dp(10), getWidth() * 0.48f);
     float right = getWidth() - outer;
     float gap = dp(5);
     float width = (right - left - gap * (count - 1)) / count;
@@ -680,7 +732,8 @@ public final class RuneKeyboardView extends View {
     float textSize;
     if (key.getType() == KeyboardKey.Type.BACKSPACE) {
       textSize = dp(27);
-    } else if (key.getType() == KeyboardKey.Type.ENTER) {
+    } else if (key.getType() == KeyboardKey.Type.ENTER
+        || key.getType() == KeyboardKey.Type.SCREEN) {
       textSize = dp(22);
     } else if (key.getType() == KeyboardKey.Type.SPACE) {
       textSize = dp(12);
@@ -776,6 +829,8 @@ public final class RuneKeyboardView extends View {
         return getContext().getString(R.string.key_opacity, state.getOpacityPercent());
       case MINIMIZE:
         return getContext().getString(R.string.key_minimize);
+      case SCREEN:
+        return getContext().getString(R.string.key_screen);
       default:
         return "";
     }
@@ -1540,7 +1595,7 @@ public final class RuneKeyboardView extends View {
 
   private void performFeedback(int soundEffect) {
     if (soundFeedbackEnabled && audioManager != null) {
-      audioManager.playSoundEffect(soundEffect);
+      audioManager.playSoundEffect(soundEffect, KEY_SOUND_VOLUME);
     }
     if (hapticFeedbackEnabled) {
       performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP);

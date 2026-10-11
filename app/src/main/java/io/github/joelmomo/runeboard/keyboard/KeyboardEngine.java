@@ -19,6 +19,8 @@ public final class KeyboardEngine {
         void onEditorCommand(EditorCommand command);
         void onMinimizedChanged(boolean minimized);
         void onBackgroundOpacityChanged(int opacity);
+        /** Move the keyboard to the other screen */
+        default void onSwitchScreen() {}
     }
 
     public enum Update {
@@ -251,6 +253,9 @@ public final class KeyboardEngine {
                 return Update.VISUAL;
             case MINIMIZE:
                 return setMinimized(true);
+            case SCREEN:
+                output.onSwitchScreen();
+                return Update.NONE;
             default:
                 return Update.NONE;
         }

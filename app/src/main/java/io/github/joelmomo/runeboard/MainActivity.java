@@ -900,6 +900,9 @@ public final class MainActivity extends Activity {
     if (RuneThemes.ID_TRANSPARENT.equals(themeId)) {
       return getString(R.string.theme_transparent_title);
     }
+    if (RuneThemes.ID_LIGHT.equals(themeId)) {
+      return getString(R.string.theme_light_title);
+    }
     if (RuneThemes.ID_CUSTOM.equals(themeId)) {
       return getString(R.string.theme_custom_title);
     }
@@ -988,6 +991,12 @@ public final class MainActivity extends Activity {
               RuneThemes.transparentTheme(),
               R.string.theme_transparent_title,
               R.string.theme_transparent_subtitle);
+          addThemePickerOption(
+              root,
+              dialog,
+              RuneThemes.lightTheme(),
+              R.string.theme_light_title,
+              R.string.theme_light_subtitle);
           addThemePickerOption(
               root,
               dialog,
