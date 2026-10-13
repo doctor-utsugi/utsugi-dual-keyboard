@@ -12,7 +12,7 @@ public final class KeyboardLayoutTest {
         KeyboardLayout layout = KeyboardLayouts.qwerty();
 
         assertEquals(6, layout.getRowCount());
-        assertEquals(9, layout.getRow(0).size());
+        assertEquals(10, layout.getRow(0).size());
         assertEquals(10, layout.getRow(1).size());
         assertEquals(10, layout.getRow(2).size());
         assertEquals(9, layout.getRow(3).size());
@@ -48,6 +48,8 @@ public final class KeyboardLayoutTest {
                 layout.getKey(0, 7).getType());
         assertEquals(KeyboardKey.Type.SCREEN,
                 layout.getKey(0, 8).getType());
+        assertEquals(KeyboardKey.Type.HIDE,
+                layout.getKey(0, 9).getType());
     }
 
     @Test

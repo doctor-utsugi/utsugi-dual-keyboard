@@ -129,6 +129,9 @@ public final class KeyboardLayouts {
                         1f),
                 KeyboardKey.action(
                         KeyboardKey.Type.MINIMIZE,
+                        1f),
+                KeyboardKey.action(
+                        KeyboardKey.Type.HIDE,
                         1f)),
                 2.2f, 2.2f, 1.08f));
         return new KeyboardLayout(rows);
@@ -198,7 +201,8 @@ public final class KeyboardLayouts {
                 command(EditorCommand.REDO, "REDO", 1f),
                 KeyboardKey.action(KeyboardKey.Type.MINIMIZE, 1f),
                 KeyboardKey.action(KeyboardKey.Type.EDIT, 1f),
-                KeyboardKey.action(KeyboardKey.Type.SCREEN, 1f));
+                KeyboardKey.action(KeyboardKey.Type.SCREEN, 1f),
+                KeyboardKey.action(KeyboardKey.Type.HIDE, 1f));
     }
 
     private static List<KeyboardKey> symbolActionKeys() {

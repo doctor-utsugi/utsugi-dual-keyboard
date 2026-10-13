@@ -114,6 +114,7 @@
     <string name="key_opacity">BG %1$d%%</string>
     <string name="key_minimize">MIN</string>
     <string name="key_screen">⇅</string>
+    <string name="key_hide">▼</string>
     <string name="header_title" translatable="false">RUNEBOARD</string>
     <string name="header_controller" translatable="false">D-PAD</string>
     <string name="header_background">BG %1$d%%</string>

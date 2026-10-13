@@ -13,7 +13,8 @@ public final class KeyboardKey {
         ENTER,
         OPACITY,
         MINIMIZE,
-        SCREEN
+        SCREEN,
+        HIDE
     }
 
     private final Type type;

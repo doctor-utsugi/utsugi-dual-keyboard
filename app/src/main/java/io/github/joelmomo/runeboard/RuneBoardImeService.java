@@ -518,6 +518,11 @@ public final class RuneBoardImeService extends InputMethodService
   }
 
   @Override
+  public void onHideKeyboard() {
+    requestHideSelf(0);
+  }
+
+  @Override
   public void onSwitchScreen() {
     // su may ask for permission the first time: never wait for it on the main thread
     new Thread(

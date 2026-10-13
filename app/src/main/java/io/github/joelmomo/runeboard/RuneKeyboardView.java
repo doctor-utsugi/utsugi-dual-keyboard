@@ -279,6 +279,13 @@ public final class RuneKeyboardView extends View {
                   listener.onSwitchScreen();
                 }
               }
+
+              @Override
+              public void onHideKeyboard() {
+                if (listener != null) {
+                  listener.onHideKeyboard();
+                }
+              }
             },
             initialOpacity,
             profile.locale);
@@ -735,6 +742,8 @@ public final class RuneKeyboardView extends View {
     } else if (key.getType() == KeyboardKey.Type.ENTER
         || key.getType() == KeyboardKey.Type.SCREEN) {
       textSize = dp(22);
+    } else if (key.getType() == KeyboardKey.Type.HIDE) {
+      textSize = dp(16);
     } else if (key.getType() == KeyboardKey.Type.SPACE) {
       textSize = dp(12);
     } else if (key.getType() != KeyboardKey.Type.TEXT) {
@@ -831,6 +840,8 @@ public final class RuneKeyboardView extends View {
         return getContext().getString(R.string.key_minimize);
       case SCREEN:
         return getContext().getString(R.string.key_screen);
+      case HIDE:
+        return getContext().getString(R.string.key_hide);
       default:
         return "";
     }
