@@ -263,6 +263,24 @@ public final class KeyboardEngineTest {
         assertEquals(List.of(0), output.backgroundOpacities);
     }
 
+    @Test
+    public void sizeKeyAsksOutputToToggleCompact() {
+        RecordingOutput output = new RecordingOutput();
+        KeyboardEngine engine =
+                new KeyboardEngine(KeyboardLayouts.qwerty(), output);
+
+        for (int i = 0; i < 6; i++) {
+            engine.handle(ControllerAction.MOVE_UP);
+        }
+        for (int i = 0; i < 10; i++) {
+            engine.handle(ControllerAction.MOVE_RIGHT);
+        }
+        assertEquals(KeyboardKey.Type.SIZE, engine.getState().getSelectedKey().getType());
+        engine.handle(ControllerAction.PRESS_SELECTED);
+
+        assertEquals(1, output.compactToggles);
+    }
+
     private static final class RecordingOutput
             implements KeyboardEngine.Output {
 
@@ -273,6 +291,7 @@ public final class KeyboardEngineTest {
         final List<Integer> backgroundOpacities = new ArrayList<>();
         final List<EditorCommand> editorCommands = new ArrayList<>();
         int languageChanges;
+        int compactToggles;
         int suggestionAccepts;
 
         int backspaces;
@@ -321,6 +340,11 @@ public final class KeyboardEngineTest {
         @Override
         public void onEditorCommand(EditorCommand command) {
             editorCommands.add(command);
+        }
+
+        @Override
+        public void onToggleCompact() {
+            compactToggles++;
         }
 
         @Override

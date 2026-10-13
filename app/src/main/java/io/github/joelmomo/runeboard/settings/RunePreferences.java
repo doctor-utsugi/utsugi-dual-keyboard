@@ -23,6 +23,7 @@ public final class RunePreferences {
   private static final String KEY_AUTOCORRECT_ENABLED = "autocorrect_enabled";
   private static final String KEY_HAPTIC_FEEDBACK = "haptic_feedback";
   private static final String KEY_SOUND_FEEDBACK = "sound_feedback";
+  private static final String KEY_COMPACT_LAYOUT = "compact_layout";
   private static final String KEY_FONT_ID = "font_id";
   private static final String KEY_KEY_TEXT_COLOR = "key_text_color";
   private static final String KEY_CUSTOM_ACCENT = "custom_accent";
@@ -177,6 +178,14 @@ public final class RunePreferences {
 
   public void setHapticFeedbackEnabled(boolean enabled) {
     preferences.edit().putBoolean(KEY_HAPTIC_FEEDBACK, enabled).apply();
+  }
+
+  public boolean isCompactLayout() {
+    return preferences.getBoolean(KEY_COMPACT_LAYOUT, false);
+  }
+
+  public void setCompactLayout(boolean compact) {
+    preferences.edit().putBoolean(KEY_COMPACT_LAYOUT, compact).apply();
   }
 
   public boolean isSoundFeedbackEnabled() {

@@ -14,7 +14,8 @@ public final class KeyboardKey {
         OPACITY,
         MINIMIZE,
         SCREEN,
-        HIDE
+        HIDE,
+        SIZE
     }
 
     private final Type type;

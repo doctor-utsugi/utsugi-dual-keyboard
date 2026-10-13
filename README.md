@@ -13,6 +13,9 @@
   so it needs **root** (it runs `settings put` through `su`), then restarts the keyboard so the
   system places it on the other screen. The opacity key it replaces stays in EDIT mode.
 - **▼ key** right next to ⇅ (and in the bottom row of EDIT mode) hides the keyboard.
+- **Size key** (COMPACT / FULL) at the end of the top row, and in EDIT mode, switches the keyboard
+  between its full size and a compact one that takes at most 50% of the screen height, with keys
+  and lettering scaled to fit. The choice is saved and survives restarts and moving between screens.
 - **On the main (upper) screen** the keyboard takes at most 60% of the height, so the app stays
   visible, and keeps its keys clear of the navigation bar.
 - **Key clicks** play at 8% of the system click volume.

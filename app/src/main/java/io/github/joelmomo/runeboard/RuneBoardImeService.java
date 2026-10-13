@@ -138,6 +138,7 @@ public final class RuneBoardImeService extends InputMethodService
             preferences.getKeyTextColor(theme),
             preferences.isHapticFeedbackEnabled(),
             preferences.isSoundFeedbackEnabled());
+    view.setCompactLayout(preferences.isCompactLayout());
     view.setListener(this);
     view.setEditorAction(resolveEditorAction(getCurrentInputEditorInfo()));
     view.setFocusable(true);
@@ -515,6 +516,15 @@ public final class RuneBoardImeService extends InputMethodService
   @Override
   public void onBackgroundOpacityChanged(int opacity) {
     preferences.setBackgroundOpacity(opacity);
+  }
+
+  @Override
+  public void onToggleCompact() {
+    boolean compact = !preferences.isCompactLayout();
+    preferences.setCompactLayout(compact);
+    if (keyboardView != null) {
+      keyboardView.setCompactLayout(compact);
+    }
   }
 
   @Override

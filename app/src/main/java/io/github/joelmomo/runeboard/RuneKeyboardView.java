@@ -36,6 +36,7 @@ import io.github.joelmomo.runeboard.keyboard.KeyboardLayout;
 import io.github.joelmomo.runeboard.keyboard.KeyboardLayouts;
 import io.github.joelmomo.runeboard.keyboard.KeyboardRow;
 import io.github.joelmomo.runeboard.keyboard.KeyboardState;
+import io.github.joelmomo.runeboard.keyboard.KeyboardSizing;
 import io.github.joelmomo.runeboard.keyboard.SpacebarCursorPolicy;
 import io.github.joelmomo.runeboard.language.KeyboardProfile;
 import io.github.joelmomo.runeboard.language.KeyboardProfiles;
@@ -90,8 +91,6 @@ public final class RuneKeyboardView extends View {
   private final AudioManager audioManager;
   /** Relative volume of key clicks: a faint tick rather than the system's full click */
   private static final float KEY_SOUND_VOLUME = 0.08f;
-  /** Most of the main screen the keyboard may take, leaving the rest to the app */
-  private static final float MAIN_SCREEN_SHARE = 0.6f;
   private final Typeface keyboardTypeface;
   private final Typeface keyboardTypefaceBold;
   private final int keyTextColor;
@@ -100,6 +99,7 @@ public final class RuneKeyboardView extends View {
 
   private EditorActionSpec editorAction = EditorActionSpec.enter();
   private Listener listener;
+  private boolean compactLayout;
   private LinearGradient backgroundGradient;
   private boolean suggestionsRecommended;
   private final Runnable touchRepeatRunnable;
@@ -281,6 +281,13 @@ public final class RuneKeyboardView extends View {
               }
 
               @Override
+              public void onToggleCompact() {
+                if (listener != null) {
+                  listener.onToggleCompact();
+                }
+              }
+
+              @Override
               public void onHideKeyboard() {
                 if (listener != null) {
                   listener.onHideKeyboard();
@@ -339,6 +346,16 @@ public final class RuneKeyboardView extends View {
     applyUpdate(engine.resetShiftMode());
   }
 
+  public void setCompactLayout(boolean compact) {
+    if (compactLayout == compact) {
+      return;
+    }
+    compactLayout = compact;
+    requestLayout();
+    rebuildGeometry(getWidth(), getHeight());
+    invalidate();
+  }
+
   public void setListener(Listener listener) {
     this.listener = listener;
   }
@@ -358,10 +375,14 @@ public final class RuneKeyboardView extends View {
 
     int desiredHeight = engine.getState().isMinimized() ? dp(58) : availableHeight;
     android.view.Display display = getDisplay();
-    if (display != null && display.getDisplayId() == android.view.Display.DEFAULT_DISPLAY) {
-      int screenHeight = getResources().getDisplayMetrics().heightPixels;
-      desiredHeight = Math.min(desiredHeight, Math.round(screenHeight * MAIN_SCREEN_SHARE));
-    }
+    boolean mainScreen =
+        display != null && display.getDisplayId() == android.view.Display.DEFAULT_DISPLAY;
+    desiredHeight =
+        KeyboardSizing.maxHeight(
+            desiredHeight,
+            getResources().getDisplayMetrics().heightPixels,
+            mainScreen,
+            compactLayout);
 
     setMeasuredDimension(
         resolveSize(width, widthMeasureSpec), resolveSize(desiredHeight, heightMeasureSpec));
@@ -751,7 +772,7 @@ public final class RuneKeyboardView extends View {
     } else {
       textSize = dp(19);
     }
-    paint.setTextSize(textSize);
+    paint.setTextSize(textSize * KeyboardSizing.textScale(compactLayout));
 
     float baseline = rect.centerY() - (paint.ascent() + paint.descent()) / 2f;
     String label = displayLabel(key);
@@ -842,6 +863,9 @@ public final class RuneKeyboardView extends View {
         return getContext().getString(R.string.key_screen);
       case HIDE:
         return getContext().getString(R.string.key_hide);
+      case SIZE:
+        return getContext()
+            .getString(compactLayout ? R.string.key_size_full : R.string.key_size_compact);
       default:
         return "";
     }

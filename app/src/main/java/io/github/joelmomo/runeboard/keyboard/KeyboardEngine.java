@@ -23,6 +23,8 @@ public final class KeyboardEngine {
         default void onSwitchScreen() {}
         /** Dismiss the keyboard */
         default void onHideKeyboard() {}
+        /** Switch the keyboard between its full and compact sizes */
+        default void onToggleCompact() {}
     }
 
     public enum Update {
@@ -260,6 +262,9 @@ public final class KeyboardEngine {
                 return Update.NONE;
             case HIDE:
                 output.onHideKeyboard();
+                return Update.NONE;
+            case SIZE:
+                output.onToggleCompact();
                 return Update.NONE;
             default:
                 return Update.NONE;
