@@ -429,6 +429,12 @@ public final class RuneKeyboardView extends View {
     return Math.max(0, Math.min(covered, navigationBar));
   }
 
+  private static float rowHeightWeight(KeyboardRow row, boolean compactRows) {
+    return compactRows
+        ? KeyboardSizing.compactRowWeight(row.getHeightWeight())
+        : row.getHeightWeight();
+  }
+
   private void rebuildGeometry(int width, int height) {
     height -= mainScreenBottomInset();
     hitTargets.clear();
@@ -453,13 +459,22 @@ public final class RuneKeyboardView extends View {
     // downward by exactly the old bottom margin. This preserves key
     // heights while making the thumb row finish flush with the bottom.
     float typingBlockOffset = outer;
-    float availableHeight = Math.max(1f, height - contentTop - typingBlockOffset - rowGaps);
-    float heightUnit = availableHeight / layout.getTotalHeightWeight();
+    // The compact keyboard keeps a thin margin at the bottom so the last row's rounded corners
+    // and the selection halo are not cut by the window edge, and evens out the row heights
+    boolean compactRows = compactLayout && !state.isEditing();
+    float bottomMargin = compactLayout ? dp(3) : 0f;
+    float totalWeight = 0f;
+    for (int rowIndex = 0; rowIndex < layout.getRowCount(); rowIndex++) {
+      totalWeight += rowHeightWeight(layout.getRow(rowIndex), compactRows);
+    }
+    float availableHeight =
+        Math.max(1f, height - contentTop - typingBlockOffset - rowGaps - bottomMargin);
+    float heightUnit = availableHeight / totalWeight;
 
     float top = contentTop;
     for (int rowIndex = 0; rowIndex < layout.getRowCount(); rowIndex++) {
       KeyboardRow row = layout.getRow(rowIndex);
-      float rowHeight = heightUnit * row.getHeightWeight();
+      float rowHeight = heightUnit * rowHeightWeight(row, compactRows);
       float widthWithoutGaps = width - outer * 2 - gap * (row.size() - 1);
       float widthUnit = widthWithoutGaps / row.getTotalWidthWeight();
       float x = outer + row.getLeftInsetWeight() * widthUnit;
@@ -797,13 +812,17 @@ public final class RuneKeyboardView extends View {
     paint.setStyle(Paint.Style.FILL);
     paint.setTypeface(keyboardTypefaceBold);
     paint.setTextAlign(Paint.Align.RIGHT);
-    paint.setTextSize(dp(7));
+    paint.setTextSize(dp(7) * KeyboardSizing.hintScale(compactLayout));
     boolean activeShift = key.getType() == KeyboardKey.Type.SHIFT && engine.getState().isShifted();
     boolean emphasized = selected || activeShift;
     paint.setColor(emphasized ? theme.selectedContent : theme.textSecondary);
     boolean commandRow = row == 0 && !engine.getState().isEditing();
     paint.setAlpha(emphasized ? 255 : commandRow ? 225 : 230);
-    canvas.drawText(hint, rect.right - dp(7), rect.top + dp(11), paint);
+    canvas.drawText(
+        hint,
+        rect.right - dp(7),
+        rect.top + dp(11) * KeyboardSizing.hintScale(compactLayout),
+        paint);
     paint.setAlpha(255);
   }
 

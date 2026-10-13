@@ -10,6 +10,11 @@ public final class KeyboardSizing {
     /** Lettering scale in the compact keyboard, whose keys are shorter */
     public static final float COMPACT_TEXT_SCALE = 0.8f;
 
+    /** Controller hints in the corner of a key shrink further so they clear the key's label */
+    public static final float COMPACT_HINT_SCALE = 0.7f;
+    /** Shortest a row may be, relative to a typing row, in the compact keyboard */
+    public static final float COMPACT_MIN_ROW_WEIGHT = 0.9f;
+
     private KeyboardSizing() {}
 
     public static int maxHeight(
@@ -29,5 +34,13 @@ public final class KeyboardSizing {
 
     public static float textScale(boolean compact) {
         return compact ? COMPACT_TEXT_SCALE : 1f;
+    }
+
+    public static float hintScale(boolean compact) {
+        return compact ? COMPACT_HINT_SCALE : 1f;
+    }
+
+    public static float compactRowWeight(float weight) {
+        return Math.max(weight, COMPACT_MIN_ROW_WEIGHT);
     }
 }

@@ -115,7 +115,7 @@
     <string name="key_minimize">MIN</string>
     <string name="key_screen">⇅</string>
     <string name="key_hide">▼</string>
-    <string name="key_size_compact">COMPACT</string>
+    <string name="key_size_compact">MINI</string>
     <string name="key_size_full">FULL</string>
     <string name="header_title" translatable="false">RUNEBOARD</string>
     <string name="header_controller" translatable="false">D-PAD</string>

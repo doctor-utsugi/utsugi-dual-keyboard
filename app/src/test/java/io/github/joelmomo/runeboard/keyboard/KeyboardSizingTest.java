@@ -30,4 +30,12 @@ public final class KeyboardSizingTest {
         assertEquals(1f, KeyboardSizing.textScale(false), 0f);
         assertTrue(KeyboardSizing.textScale(true) < 1f);
     }
+
+    @Test
+    public void compactRowsAreEvenedOutAndHintsShrink() {
+        assertEquals(0.9f, KeyboardSizing.compactRowWeight(0.72f), 0f);
+        assertEquals(1f, KeyboardSizing.compactRowWeight(1f), 0f);
+        assertEquals(1f, KeyboardSizing.hintScale(false), 0f);
+        assertTrue(KeyboardSizing.hintScale(true) < 1f);
+    }
 }
