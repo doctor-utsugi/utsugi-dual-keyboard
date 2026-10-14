@@ -29,7 +29,7 @@ public final class RuneThemes {
                 220,
                 10f,
                 6f,
-                12f,
+                8f,
                 38f);
     }
 
@@ -51,7 +51,7 @@ public final class RuneThemes {
                 225,
                 10f,
                 6f,
-                12f,
+                8f,
                 38f);
     }
 
@@ -73,7 +73,7 @@ public final class RuneThemes {
                 255,
                 6f,
                 6f,
-                10f,
+                6f,
                 0f,
                 true);
     }
@@ -96,7 +96,7 @@ public final class RuneThemes {
                 195,
                 10f,
                 6f,
-                12f,
+                8f,
                 38f);
     }
 

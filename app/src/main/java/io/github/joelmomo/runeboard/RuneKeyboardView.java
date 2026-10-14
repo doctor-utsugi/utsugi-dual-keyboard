@@ -446,8 +446,8 @@ public final class RuneKeyboardView extends View {
     }
 
     KeyboardLayout layout = state.getLayout();
-    float outer = dp(theme.outerMarginDp);
-    float gap = dp(theme.keyGapDp);
+    float outer = outerMargin();
+    float gap = keyGap();
     float headerHeight = dp(theme.headerHeightDp);
     if (!theme.plainHeader) {
       languageTarget.set(
@@ -545,7 +545,7 @@ public final class RuneKeyboardView extends View {
   private void drawHeader(Canvas canvas) {
     suggestionTargets.clear();
     KeyboardState state = engine.getState();
-    float outer = dp(theme.outerMarginDp);
+    float outer = outerMargin();
     float headerHeight = dp(theme.headerHeightDp);
     if (theme.plainHeader) {
       if (headerHeight > 0 && !state.isEditing() && !suggestions.isEmpty()) {
@@ -728,14 +728,14 @@ public final class RuneKeyboardView extends View {
           rect.top - dp(2),
           rect.right + dp(2),
           rect.bottom + dp(2),
-          dp(theme.keyRadiusDp + 2f),
-          dp(theme.keyRadiusDp + 2f),
+          keyRadius() + dp(2f),
+          keyRadius() + dp(2f),
           paint);
 
       paint.setStyle(Paint.Style.FILL);
       paint.setColor(theme.selectedFill);
       paint.setAlpha(245);
-      canvas.drawRoundRect(rect, dp(theme.keyRadiusDp), dp(theme.keyRadiusDp), paint);
+      canvas.drawRoundRect(rect, keyRadius(), keyRadius(), paint);
 
       paint.setStyle(Paint.Style.STROKE);
       paint.setStrokeWidth(dp(2));
@@ -746,21 +746,21 @@ public final class RuneKeyboardView extends View {
           rect.top - dp(1),
           rect.right + dp(1),
           rect.bottom + dp(1),
-          dp(theme.keyRadiusDp + 1f),
-          dp(theme.keyRadiusDp + 1f),
+          keyRadius() + dp(1f),
+          keyRadius() + dp(1f),
           paint);
     } else {
       paint.setStyle(Paint.Style.FILL);
       paint.setColor(fill);
       paint.setAlpha(alpha);
-      canvas.drawRoundRect(rect, dp(theme.keyRadiusDp), dp(theme.keyRadiusDp), paint);
+      canvas.drawRoundRect(rect, keyRadius(), keyRadius(), paint);
 
       if (primaryTyping) {
         paint.setStyle(Paint.Style.STROKE);
         paint.setStrokeWidth(dp(1));
         paint.setColor(theme.textSecondary);
         paint.setAlpha(key.getType() == KeyboardKey.Type.SPACE ? 52 : 34);
-        canvas.drawRoundRect(rect, dp(theme.keyRadiusDp), dp(theme.keyRadiusDp), paint);
+        canvas.drawRoundRect(rect, keyRadius(), keyRadius(), paint);
       }
     }
 
@@ -891,7 +891,7 @@ public final class RuneKeyboardView extends View {
   }
 
   private void drawMinimized(Canvas canvas) {
-    float outer = dp(theme.outerMarginDp);
+    float outer = outerMargin();
     float centerY = getHeight() / 2f;
     float badge = dp(24);
     float badgeTop = centerY - badge / 2f;
@@ -1070,7 +1070,7 @@ public final class RuneKeyboardView extends View {
     float left = variantSourceBounds.centerX() - total / 2f;
     left = Math.max(margin, Math.min(left, getWidth() - margin - total));
 
-    float headerBottom = dp(theme.outerMarginDp + theme.headerHeightDp + 8f);
+    float headerBottom = outerMargin() + dp(theme.headerHeightDp + 8f);
     float top = variantSourceBounds.top - height - dp(8);
     if (top < headerBottom) {
       top = variantSourceBounds.bottom + dp(8);
@@ -1325,35 +1325,57 @@ public final class RuneKeyboardView extends View {
       return true;
     }
 
-    for (HitTarget target : hitTargets) {
-      if (target.bounds.contains(event.getX(), event.getY())) {
-        KeyboardEngine.Update selectionUpdate = engine.select(target.row, target.col);
-        KeyboardKey selectedKey = engine.getState().getSelectedKey();
+    HitTarget target = keyAt(event.getX(), event.getY());
+    if (target == null) {
+      return true;
+    }
+    KeyboardEngine.Update selectionUpdate = engine.select(target.row, target.col);
+    KeyboardKey selectedKey = engine.getState().getSelectedKey();
 
-        if (selectedKey.getType() == KeyboardKey.Type.SPACE) {
-          applyUpdate(selectionUpdate);
-          beginSpacebarCursor(target, event.getX());
-          return true;
-        }
-
-        provideKeyFeedback(selectedKey);
-
-        if (!variantsForKey(selectedKey).isEmpty()) {
-          applyUpdate(selectionUpdate);
-          beginTouchVariant(target);
-          return true;
-        }
-
-        KeyboardEngine.Update pressUpdate = engine.pressSelected();
-        applyUpdate(merge(selectionUpdate, pressUpdate));
-        if (KeyRepeatPolicy.isTouchKeyRepeatable(selectedKey)) {
-          startTouchRepeat(target);
-        }
-        return true;
-      }
+    if (selectedKey.getType() == KeyboardKey.Type.SPACE) {
+      applyUpdate(selectionUpdate);
+      beginSpacebarCursor(target, event.getX());
+      return true;
     }
 
+    provideKeyFeedback(selectedKey);
+
+    if (!variantsForKey(selectedKey).isEmpty()) {
+      applyUpdate(selectionUpdate);
+      beginTouchVariant(target);
+      return true;
+    }
+
+    KeyboardEngine.Update pressUpdate = engine.pressSelected();
+    applyUpdate(merge(selectionUpdate, pressUpdate));
+    if (KeyRepeatPolicy.isTouchKeyRepeatable(selectedKey)) {
+      startTouchRepeat(target);
+    }
     return true;
+  }
+
+  /** The key under a touch; one in a gap or margin goes to the nearest key instead of being lost */
+  private HitTarget keyAt(float x, float y) {
+    float headerHeight = dp(theme.headerHeightDp);
+    if (headerHeight > 0 && y < outerMargin() + headerHeight) {
+      return null;
+    }
+    float reach = outerMargin() + keyGap();
+    HitTarget nearest = null;
+    float nearestDistance = Float.MAX_VALUE;
+    for (HitTarget target : hitTargets) {
+      RectF bounds = target.bounds;
+      float distance =
+          KeyboardSizing.distanceToKey(bounds.left, bounds.top, bounds.right, bounds.bottom, x, y);
+      if (distance == 0f) {
+        return target;
+      }
+      if (distance <= reach && distance < nearestDistance) {
+        nearest = target;
+        nearestDistance = distance;
+      }
+    }
+    return nearest;
   }
 
   private void startTouchRepeat(HitTarget target) {
@@ -1361,6 +1383,9 @@ public final class RuneKeyboardView extends View {
     touchRepeatRow = target.row;
     touchRepeatCol = target.col;
     touchRepeatBounds.set(target.bounds);
+    // The finger may have landed in the gap next to the key, which still counts as the key
+    float reach = outerMargin() + keyGap();
+    touchRepeatBounds.inset(-reach, -reach);
     postDelayed(touchRepeatRunnable, KeyRepeatPolicy.TOUCH_INITIAL_DELAY_MS);
   }
 
@@ -1685,6 +1710,18 @@ public final class RuneKeyboardView extends View {
     } else if (update == KeyboardEngine.Update.VISUAL) {
       invalidate();
     }
+  }
+
+  private float outerMargin() {
+    return dp(KeyboardSizing.outerMarginDp(theme.outerMarginDp, compactLayout));
+  }
+
+  private float keyGap() {
+    return dp(KeyboardSizing.keyGapDp(theme.keyGapDp, compactLayout));
+  }
+
+  private float keyRadius() {
+    return dp(KeyboardSizing.keyRadiusDp(theme.keyRadiusDp, compactLayout));
   }
 
   private int dp(float value) {

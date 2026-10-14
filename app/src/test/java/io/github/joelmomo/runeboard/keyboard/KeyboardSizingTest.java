@@ -38,4 +38,24 @@ public final class KeyboardSizingTest {
         assertEquals(1f, KeyboardSizing.hintScale(false), 0f);
         assertTrue(KeyboardSizing.hintScale(true) < 1f);
     }
+
+    @Test
+    public void compactKeyboardTightensMarginsGapsAndCornersAndFullDoesNot() {
+        assertEquals(10f, KeyboardSizing.outerMarginDp(10f, false), 0f);
+        assertEquals(6f, KeyboardSizing.keyGapDp(6f, false), 0f);
+        assertEquals(8f, KeyboardSizing.keyRadiusDp(8f, false), 0f);
+        assertTrue(KeyboardSizing.outerMarginDp(10f, true) < 10f);
+        assertTrue(KeyboardSizing.keyGapDp(6f, true) < 6f);
+        assertTrue(KeyboardSizing.keyRadiusDp(8f, true) < 8f);
+        assertEquals(2f, KeyboardSizing.keyGapDp(2f, true), 0f);
+    }
+
+    @Test
+    public void touchesInsideAKeyAreOnItAndTouchesInAGapMeasureToItsEdge() {
+        assertEquals(0f, KeyboardSizing.distanceToKey(10f, 10f, 50f, 30f, 20f, 20f), 0f);
+        assertEquals(0f, KeyboardSizing.distanceToKey(10f, 10f, 50f, 30f, 50f, 30f), 0f);
+        assertEquals(4f, KeyboardSizing.distanceToKey(10f, 10f, 50f, 30f, 30f, 6f), 0.001f);
+        assertEquals(3f, KeyboardSizing.distanceToKey(10f, 10f, 50f, 30f, 53f, 20f), 0.001f);
+        assertEquals(5f, KeyboardSizing.distanceToKey(10f, 10f, 50f, 30f, 53f, 34f), 0.001f);
+    }
 }
