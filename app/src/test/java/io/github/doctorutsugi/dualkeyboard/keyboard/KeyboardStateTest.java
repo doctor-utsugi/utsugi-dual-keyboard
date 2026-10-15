@@ -1,0 +1,244 @@
+package io.github.doctorutsugi.dualkeyboard.keyboard;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
+import org.junit.Test;
+
+public final class KeyboardStateTest {
+
+    @Test
+    public void startsOnQ() {
+        KeyboardState state =
+                new KeyboardState(KeyboardLayouts.qwerty());
+
+        assertEquals(2, state.getSelectedRow());
+        assertEquals(0, state.getSelectedCol());
+        assertEquals("q", state.getSelectedKey().getText());
+    }
+
+    @Test
+    public void horizontalMovementWrapsWithinRow() {
+        KeyboardState state =
+                new KeyboardState(KeyboardLayouts.qwerty());
+
+        assertTrue(state.move(-1, 0));
+        assertEquals(9, state.getSelectedCol());
+        assertEquals("p", state.getSelectedKey().getText());
+
+        assertTrue(state.move(1, 0));
+        assertEquals(0, state.getSelectedCol());
+        assertEquals("q", state.getSelectedKey().getText());
+    }
+
+    @Test
+    public void verticalMovementTracksPhysicalKeyCenter() {
+        KeyboardState state =
+                new KeyboardState(KeyboardLayouts.qwerty());
+        state.select(2, 9);
+
+        assertTrue(state.move(0, 1));
+        assertEquals(3, state.getSelectedRow());
+        assertEquals(8, state.getSelectedCol());
+        assertEquals("l", state.getSelectedKey().getText());
+
+        assertTrue(state.move(0, 1));
+        assertEquals(4, state.getSelectedRow());
+        assertEquals(8, state.getSelectedCol());
+        assertEquals(KeyboardKey.Type.BACKSPACE,
+                state.getSelectedKey().getType());
+    }
+
+    @Test
+    public void opacityCyclesAndReturnsToOpaque() {
+        KeyboardState state =
+                new KeyboardState(KeyboardLayouts.qwerty());
+
+        assertEquals(255, state.getOpacity());
+        state.cycleOpacity();
+        assertEquals(170, state.getOpacity());
+        state.cycleOpacity();
+        assertEquals(85, state.getOpacity());
+        state.cycleOpacity();
+        assertEquals(0, state.getOpacity());
+        state.cycleOpacity();
+        assertEquals(255, state.getOpacity());
+    }
+
+    @Test
+    public void initialOpacitySnapsToNearestSupportedLevel() {
+        KeyboardState state =
+                new KeyboardState(
+                        KeyboardLayouts.qwerty(),
+                        180);
+
+        assertEquals(170, state.getOpacity());
+    }
+
+    @Test
+    public void shiftCyclesOffOnceCapsAndBackOff() {
+        KeyboardState state =
+                new KeyboardState(KeyboardLayouts.qwerty());
+
+        assertEquals(
+                KeyboardState.ShiftMode.OFF,
+                state.getShiftMode());
+
+        state.advanceShiftMode();
+        assertEquals(
+                KeyboardState.ShiftMode.ONCE,
+                state.getShiftMode());
+        assertTrue(state.isShifted());
+        assertFalse(state.isCapsLocked());
+
+        state.advanceShiftMode();
+        assertEquals(
+                KeyboardState.ShiftMode.CAPS_LOCK,
+                state.getShiftMode());
+        assertTrue(state.isCapsLocked());
+        assertFalse(state.consumeOneShotShift());
+
+        state.advanceShiftMode();
+        assertEquals(
+                KeyboardState.ShiftMode.OFF,
+                state.getShiftMode());
+    }
+
+    @Test
+    public void oneShotShiftIsConsumedButCapsIsNot() {
+        KeyboardState state =
+                new KeyboardState(KeyboardLayouts.qwerty());
+
+        state.advanceShiftMode();
+        assertTrue(state.consumeOneShotShift());
+        assertEquals(
+                KeyboardState.ShiftMode.OFF,
+                state.getShiftMode());
+
+        state.advanceShiftMode();
+        state.advanceShiftMode();
+        assertFalse(state.consumeOneShotShift());
+        assertEquals(
+                KeyboardState.ShiftMode.CAPS_LOCK,
+                state.getShiftMode());
+    }
+
+    @Test
+    public void symbolModeSwitchesLayoutsAndClearsShift() {
+        KeyboardState state = new KeyboardState(
+                KeyboardLayouts.englishQwerty(),
+                KeyboardLayouts.englishSymbols(),
+                255);
+
+        state.advanceShiftMode();
+        state.select(5, 0);
+        assertTrue(state.toggleSymbols());
+
+        assertTrue(state.isSymbols());
+        assertFalse(state.isShifted());
+        assertEquals("!", state.getLayout().getKey(2, 0).getText());
+        assertEquals(5, state.getSelectedRow());
+        assertEquals(0, state.getSelectedCol());
+        assertEquals(KeyboardKey.Type.MODE,
+                state.getSelectedKey().getType());
+
+        assertTrue(state.toggleSymbols());
+        assertFalse(state.isSymbols());
+        assertEquals(0, state.getSelectedCol());
+        assertEquals(KeyboardKey.Type.MODE,
+                state.getSelectedKey().getType());
+        assertEquals("q", state.getLayout().getKey(2, 0).getText());
+    }
+
+    @Test
+    public void editModeUsesEditorLayoutAndReturnsToAlphabet() {
+        KeyboardState state = new KeyboardState(
+                KeyboardLayouts.englishQwerty(),
+                KeyboardLayouts.englishSymbols(),
+                KeyboardLayouts.editorLayout(),
+                255);
+
+        state.advanceShiftMode();
+        state.toggleEditing();
+
+        assertTrue(state.isEditing());
+        assertFalse(state.isShifted());
+        assertEquals(KeyboardState.Mode.EDIT, state.getMode());
+        assertEquals(KeyboardKey.Type.EDIT,
+                state.getSelectedKey().getType());
+
+        state.toggleEditing();
+
+        assertFalse(state.isEditing());
+        assertEquals(KeyboardState.Mode.ALPHABET, state.getMode());
+        assertEquals(KeyboardKey.Type.EDIT,
+                state.getSelectedKey().getType());
+    }
+
+    @Test
+    public void autoShiftIsDistinctFromManualShift() {
+        KeyboardState state =
+                new KeyboardState(KeyboardLayouts.qwerty());
+
+        assertTrue(state.setAutoShifted(true));
+        assertEquals(
+                KeyboardState.ShiftMode.AUTO,
+                state.getShiftMode());
+        assertTrue(state.isShifted());
+        assertFalse(state.isCapsLocked());
+
+        state.advanceShiftMode();
+        assertEquals(
+                KeyboardState.ShiftMode.OFF,
+                state.getShiftMode());
+        assertFalse(state.isShifted());
+    }
+
+    @Test
+    public void autoShiftRestoresAfterTemporarySymbolMode() {
+        KeyboardState state = new KeyboardState(
+                KeyboardLayouts.englishQwerty(),
+                KeyboardLayouts.englishSymbols(),
+                255);
+
+        state.setAutoShifted(true);
+        state.toggleSymbols();
+        assertFalse(state.isShifted());
+
+        state.toggleSymbols();
+        assertEquals(
+                KeyboardState.ShiftMode.AUTO,
+                state.getShiftMode());
+    }
+
+    @Test
+    public void manualCapsTakesPriorityOverAutoUpdates() {
+        KeyboardState state =
+                new KeyboardState(KeyboardLayouts.qwerty());
+
+        state.advanceShiftMode();
+        state.advanceShiftMode();
+        assertTrue(state.isCapsLocked());
+
+        assertFalse(state.setAutoShifted(false));
+        assertTrue(state.isCapsLocked());
+        assertFalse(state.setAutoShifted(true));
+        assertTrue(state.isCapsLocked());
+
+        state.advanceShiftMode();
+        assertEquals(
+                KeyboardState.ShiftMode.AUTO,
+                state.getShiftMode());
+    }
+
+    @Test
+    public void movementStopsWhileMinimized() {
+        KeyboardState state =
+                new KeyboardState(KeyboardLayouts.qwerty());
+        state.setMinimized(true);
+
+        assertFalse(state.move(1, 0));
+        assertEquals(0, state.getSelectedCol());
+    }
+}

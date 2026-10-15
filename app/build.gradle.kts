@@ -3,15 +3,15 @@ plugins {
 }
 
 android {
-    namespace = "io.github.joelmomo.runeboard"
+    namespace = "io.github.doctorutsugi.dualkeyboard"
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "io.github.joelmomo.runeboard"
+        applicationId = "io.github.doctorutsugi.dualkeyboard"
         minSdk = 33
         targetSdk = 36
-        versionCode = 25
-        versionName = "0.22.0-prototype"
+        versionCode = 26
+        versionName = "0.23.0"
     }
 
     compileOptions {

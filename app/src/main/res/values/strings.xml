@@ -1,17 +1,17 @@
 <resources>
-    <string name="app_name" translatable="false">RuneBoard</string>
-    <string name="ime_name">RuneBoard Keyboard</string>
-    <string name="control_service_name">RuneBoard Physical Controls</string>
-    <string name="control_service_description">Lets RuneBoard use the AYN Thor physical buttons while the keyboard is visible.</string>
+    <string name="app_name" translatable="false">Utsugi Dual Keyboard</string>
+    <string name="ime_name">Utsugi Dual Keyboard</string>
+    <string name="control_service_name">Utsugi Dual Keyboard physical controls</string>
+    <string name="control_service_description">Lets Utsugi Dual Keyboard use the AYN Thor physical buttons while the keyboard is visible.</string>
 
     <string name="settings_subtitle">Keyboard settings for AYN Thor</string>
 
     <string name="section_setup">SETUP</string>
-    <string name="section_setup_subtitle">Complete these steps to use RuneBoard</string>
+    <string name="section_setup_subtitle">Complete these steps to use Utsugi Dual Keyboard</string>
     <string name="enable_keyboard_title">Enable keyboard</string>
-    <string name="enable_keyboard_subtitle">Allow RuneBoard in Android keyboards</string>
-    <string name="choose_keyboard_title">Select RuneBoard</string>
-    <string name="choose_keyboard_subtitle">Make RuneBoard the active keyboard</string>
+    <string name="enable_keyboard_subtitle">Allow Utsugi Dual Keyboard in Android keyboards</string>
+    <string name="choose_keyboard_title">Select Utsugi Dual Keyboard</string>
+    <string name="choose_keyboard_subtitle">Make Utsugi Dual Keyboard the active keyboard</string>
     <string name="physical_controls_title">Physical controls</string>
     <string name="physical_controls_subtitle">Allow D-pad and controller buttons</string>
     <string name="setup_ready">READY</string>
@@ -53,7 +53,7 @@
     <string name="appearance_color_title">Key label color</string>
     <string name="appearance_color_subtitle">Theme color or a fixed override</string>
     <string name="appearance_custom_subtitle">Palette, key shape and spacing</string>
-    <string name="theme_default_title" translatable="false">RuneBoard</string>
+    <string name="theme_default_title" translatable="false">Dark</string>
     <string name="theme_default_subtitle">Balanced dark</string>
     <string name="theme_oled_title">OLED Black</string>
     <string name="theme_oled_subtitle">Pure black</string>
@@ -94,7 +94,7 @@
 
     <string name="section_test">TEST KEYBOARD</string>
     <string name="section_test_subtitle">Tap the field to check your current setup</string>
-    <string name="test_hint">Tap here and type with RuneBoard</string>
+    <string name="test_hint">Tap here and type with Utsugi Dual Keyboard</string>
     <string name="more_apps_support">More apps &amp; support</string>
 
     <string name="key_shift">SHIFT</string>
@@ -117,7 +117,7 @@
     <string name="key_hide">▼</string>
     <string name="key_size_compact">MINI</string>
     <string name="key_size_full">FULL</string>
-    <string name="header_title" translatable="false">RUNEBOARD</string>
+    <string name="header_title" translatable="false">UTSUGI DUAL KEYBOARD</string>
     <string name="header_controller" translatable="false">D-PAD</string>
     <string name="header_background">BG %1$d%%</string>
     <string name="minimized_restore">%1$s / %2$s  RESTORE</string>

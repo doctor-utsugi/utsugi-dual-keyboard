@@ -1,0 +1,360 @@
+package io.github.doctorutsugi.dualkeyboard.keyboard;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
+import io.github.doctorutsugi.dualkeyboard.controller.ControllerAction;
+
+import org.junit.Test;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
+
+public final class KeyboardEngineTest {
+
+    @Test
+    public void shiftIsOneShotForText() {
+        RecordingOutput output = new RecordingOutput();
+        KeyboardEngine engine =
+                new KeyboardEngine(KeyboardLayouts.qwerty(), output);
+
+        engine.handle(ControllerAction.SHIFT);
+        engine.handle(ControllerAction.PRESS_SELECTED);
+        engine.handle(ControllerAction.PRESS_SELECTED);
+
+        assertEquals(List.of("Q", "q"), output.text);
+        assertFalse(engine.getState().isShifted());
+    }
+
+    @Test
+    public void variantCommitConsumesOneShotShift() {
+        RecordingOutput output = new RecordingOutput();
+        KeyboardEngine engine =
+                new KeyboardEngine(KeyboardLayouts.qwerty(), output);
+
+        engine.handle(ControllerAction.SHIFT);
+        assertEquals(
+                KeyboardEngine.Update.VISUAL,
+                engine.commitTextVariant("Á"));
+        assertEquals(List.of("Á"), output.text);
+        assertFalse(engine.getState().isShifted());
+    }
+
+    @Test
+    public void autoShiftUppercasesOneCharacterWithoutBecomingCapsLock() {
+        RecordingOutput output = new RecordingOutput();
+        KeyboardEngine engine =
+                new KeyboardEngine(KeyboardLayouts.qwerty(), output);
+
+        assertEquals(
+                KeyboardEngine.Update.VISUAL,
+                engine.setAutoShifted(true));
+        engine.handle(ControllerAction.PRESS_SELECTED);
+        engine.handle(ControllerAction.PRESS_SELECTED);
+
+        assertEquals(List.of("Q", "q"), output.text);
+        assertFalse(engine.getState().isShifted());
+        assertFalse(engine.getState().isCapsLocked());
+    }
+
+    @Test
+    public void capsLockPersistsUntilShiftCyclesOff() {
+        RecordingOutput output = new RecordingOutput();
+        KeyboardEngine engine =
+                new KeyboardEngine(KeyboardLayouts.qwerty(), output);
+
+        engine.handle(ControllerAction.SHIFT);
+        engine.handle(ControllerAction.SHIFT);
+        engine.handle(ControllerAction.PRESS_SELECTED);
+        engine.handle(ControllerAction.PRESS_SELECTED);
+
+        assertEquals(List.of("Q", "Q"), output.text);
+        assertTrue(engine.getState().isCapsLocked());
+
+        engine.handle(ControllerAction.SHIFT);
+        engine.handle(ControllerAction.PRESS_SELECTED);
+
+        assertEquals(List.of("Q", "Q", "q"), output.text);
+        assertFalse(engine.getState().isShifted());
+    }
+
+    @Test
+    public void modeKeySwitchesLayoutsAndTypesSymbols() {
+        RecordingOutput output = new RecordingOutput();
+        KeyboardEngine engine = new KeyboardEngine(
+                KeyboardLayouts.englishQwerty(),
+                KeyboardLayouts.englishSymbols(),
+                output,
+                255,
+                Locale.US);
+
+        engine.getState().select(5, 0);
+        assertEquals(KeyboardEngine.Update.GEOMETRY, engine.pressSelected());
+        assertTrue(engine.getState().isSymbols());
+        assertEquals(KeyboardKey.Type.MODE,
+                engine.getState().getSelectedKey().getType());
+
+        engine.handle(ControllerAction.MOVE_UP);
+        engine.handle(ControllerAction.MOVE_UP);
+        engine.handle(ControllerAction.MOVE_UP);
+        engine.pressSelected();
+        assertEquals(List.of("!"), output.text);
+
+        engine.handle(ControllerAction.MOVE_DOWN);
+        engine.handle(ControllerAction.MOVE_DOWN);
+        engine.handle(ControllerAction.MOVE_DOWN);
+        assertEquals(KeyboardKey.Type.MODE,
+                engine.getState().getSelectedKey().getType());
+        assertEquals(KeyboardEngine.Update.GEOMETRY, engine.pressSelected());
+        assertFalse(engine.getState().isSymbols());
+    }
+
+    @Test
+    public void editModeDispatchesEditorCommands() {
+        RecordingOutput output = new RecordingOutput();
+        KeyboardEngine engine = new KeyboardEngine(
+                KeyboardLayouts.englishQwerty(),
+                KeyboardLayouts.englishSymbols(),
+                KeyboardLayouts.editorLayout(),
+                output,
+                255,
+                Locale.US);
+
+        engine.getState().select(0, 7);
+        assertEquals(
+                KeyboardEngine.Update.GEOMETRY,
+                engine.pressSelected());
+        assertTrue(engine.getState().isEditing());
+        assertEquals(
+                KeyboardKey.Type.EDIT,
+                engine.getState().getSelectedKey().getType());
+
+        engine.getState().select(0, 0);
+        engine.pressSelected();
+        assertEquals(
+                List.of(EditorCommand.SELECT_ALL),
+                output.editorCommands);
+
+        engine.getState().select(5, 0);
+        engine.pressSelected();
+        assertFalse(engine.getState().isEditing());
+    }
+
+    @Test
+    public void onScreenEnterInsertsNewlineWithoutEditorAction() {
+        RecordingOutput output = new RecordingOutput();
+        KeyboardEngine engine =
+                new KeyboardEngine(KeyboardLayouts.qwerty(), output);
+
+        engine.getState().select(5, 4);
+        engine.pressSelected();
+
+        assertEquals(List.of("\n"), output.text);
+        assertEquals(0, output.enters);
+    }
+
+    @Test
+    public void directEditingActionsReachOutput() {
+        RecordingOutput output = new RecordingOutput();
+        KeyboardEngine engine =
+                new KeyboardEngine(KeyboardLayouts.qwerty(), output);
+
+        engine.handle(ControllerAction.SPACE);
+        engine.handle(ControllerAction.BACKSPACE);
+        engine.handle(ControllerAction.ENTER);
+        engine.handle(ControllerAction.CURSOR_LEFT);
+        engine.handle(ControllerAction.CURSOR_RIGHT);
+        engine.handle(ControllerAction.WORD_LEFT);
+        engine.handle(ControllerAction.WORD_RIGHT);
+
+        assertEquals(1, output.spaces);
+        assertEquals(1, output.backspaces);
+        assertEquals(1, output.enters);
+        assertEquals(List.of(-1, 1), output.cursorMoves);
+        assertEquals(List.of(-1, 1), output.wordMoves);
+    }
+
+    @Test
+    public void minimizedKeyboardOnlyCapturesRestoreActions() {
+        RecordingOutput output = new RecordingOutput();
+        KeyboardEngine engine =
+                new KeyboardEngine(KeyboardLayouts.qwerty(), output);
+
+        assertEquals(
+                KeyboardEngine.Update.LAYOUT,
+                engine.handle(ControllerAction.TOGGLE_MINIMIZE));
+        assertTrue(engine.getState().isMinimized());
+
+        assertFalse(engine.shouldCapture(ControllerAction.MOVE_LEFT));
+        assertFalse(engine.shouldCapture(ControllerAction.MOVE_RIGHT));
+        assertFalse(engine.shouldCapture(ControllerAction.BACKSPACE));
+        assertFalse(engine.shouldCapture(ControllerAction.SPACE));
+        assertFalse(engine.shouldCapture(ControllerAction.SHIFT));
+        assertFalse(engine.shouldCapture(ControllerAction.CURSOR_LEFT));
+        assertFalse(engine.shouldCapture(ControllerAction.CURSOR_RIGHT));
+        assertFalse(engine.shouldCapture(ControllerAction.ACCEPT_SUGGESTION));
+
+        assertTrue(engine.shouldCapture(ControllerAction.PRESS_SELECTED));
+        assertFalse(engine.shouldCapture(ControllerAction.PRESS_CENTER));
+        assertFalse(engine.shouldCapture(ControllerAction.ENTER));
+        assertTrue(engine.shouldCapture(ControllerAction.TOGGLE_MINIMIZE));
+    }
+
+    @Test
+    public void pressSelectedRestoresMinimizedKeyboard() {
+        RecordingOutput output = new RecordingOutput();
+        KeyboardEngine engine =
+                new KeyboardEngine(KeyboardLayouts.qwerty(), output);
+
+        engine.handle(ControllerAction.TOGGLE_MINIMIZE);
+        KeyboardEngine.Update update =
+                engine.handle(ControllerAction.PRESS_SELECTED);
+
+        assertEquals(KeyboardEngine.Update.LAYOUT, update);
+        assertFalse(engine.getState().isMinimized());
+        assertEquals(List.of(true, false), output.minimizedStates);
+    }
+
+    @Test
+    public void languageActionReachesOutput() {
+        RecordingOutput output = new RecordingOutput();
+        KeyboardEngine engine =
+                new KeyboardEngine(KeyboardLayouts.qwerty(), output);
+
+        engine.handle(ControllerAction.LANGUAGE_NEXT);
+
+        assertEquals(1, output.languageChanges);
+    }
+
+    @Test
+    public void acceptSuggestionActionReachesOutput() {
+        RecordingOutput output = new RecordingOutput();
+        KeyboardEngine engine =
+                new KeyboardEngine(KeyboardLayouts.qwerty(), output);
+
+        engine.handle(ControllerAction.ACCEPT_SUGGESTION);
+
+        assertEquals(1, output.suggestionAccepts);
+    }
+
+    @Test
+    public void opacityStartsFromConfiguredValueAndNotifiesOutput() {
+        RecordingOutput output = new RecordingOutput();
+        KeyboardEngine engine =
+                new KeyboardEngine(
+                        KeyboardLayouts.editorLayout(),
+                        output,
+                        85);
+
+        // The opacity key lives in the editor's last row, beside EDIT
+        KeyboardLayout editor = KeyboardLayouts.editorLayout();
+        int lastRow = editor.getRowCount() - 1;
+        assertEquals(KeyboardKey.Type.OPACITY, editor.getKey(lastRow, 1).getType());
+        engine.getState().select(lastRow, 1);
+        assertEquals(85, engine.getState().getOpacity());
+
+        assertEquals(
+                KeyboardEngine.Update.VISUAL,
+                engine.handle(ControllerAction.PRESS_SELECTED));
+
+        assertEquals(0, engine.getState().getOpacity());
+        assertEquals(List.of(0), output.backgroundOpacities);
+    }
+
+    @Test
+    public void sizeKeyAsksOutputToToggleCompact() {
+        RecordingOutput output = new RecordingOutput();
+        KeyboardEngine engine =
+                new KeyboardEngine(KeyboardLayouts.qwerty(), output);
+
+        for (int i = 0; i < 6; i++) {
+            engine.handle(ControllerAction.MOVE_UP);
+        }
+        for (int i = 0; i < 10; i++) {
+            engine.handle(ControllerAction.MOVE_RIGHT);
+        }
+        assertEquals(KeyboardKey.Type.SIZE, engine.getState().getSelectedKey().getType());
+        engine.handle(ControllerAction.PRESS_SELECTED);
+
+        assertEquals(1, output.compactToggles);
+    }
+
+    private static final class RecordingOutput
+            implements KeyboardEngine.Output {
+
+        final List<String> text = new ArrayList<>();
+        final List<Integer> cursorMoves = new ArrayList<>();
+        final List<Integer> wordMoves = new ArrayList<>();
+        final List<Boolean> minimizedStates = new ArrayList<>();
+        final List<Integer> backgroundOpacities = new ArrayList<>();
+        final List<EditorCommand> editorCommands = new ArrayList<>();
+        int languageChanges;
+        int compactToggles;
+        int suggestionAccepts;
+
+        int backspaces;
+        int spaces;
+        int enters;
+
+        @Override
+        public void onText(String value) {
+            text.add(value);
+        }
+
+        @Override
+        public void onBackspace() {
+            backspaces++;
+        }
+
+        @Override
+        public void onSpace() {
+            spaces++;
+        }
+
+        @Override
+        public void onEnter() {
+            enters++;
+        }
+
+        @Override
+        public void onMoveCursor(int direction) {
+            cursorMoves.add(direction);
+        }
+
+        @Override
+        public void onMoveWord(int direction) {
+            wordMoves.add(direction);
+        }
+
+        @Override
+        public void onNextLanguage() {
+            languageChanges++;
+        }
+        @Override
+        public void onAcceptSuggestion() {
+            suggestionAccepts++;
+        }
+
+        @Override
+        public void onEditorCommand(EditorCommand command) {
+            editorCommands.add(command);
+        }
+
+        @Override
+        public void onToggleCompact() {
+            compactToggles++;
+        }
+
+        @Override
+        public void onMinimizedChanged(boolean minimized) {
+            minimizedStates.add(minimized);
+        }
+
+        @Override
+        public void onBackgroundOpacityChanged(int opacity) {
+            backgroundOpacities.add(opacity);
+        }
+    }
+}

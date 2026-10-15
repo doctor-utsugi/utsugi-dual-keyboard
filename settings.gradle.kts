@@ -14,5 +14,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "RuneBoard"
+rootProject.name = "UtsugiDualKeyboard"
 include(":app")

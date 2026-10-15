@@ -22,6 +22,12 @@
 - **On the main (upper) screen** the keyboard takes at most 60% of the height, so the app stays
   visible, and keeps its keys clear of the navigation bar.
 - **Key clicks** play at 8% of the system click volume.
+- **Hidden keyboard leaves the controller alone**: once the keyboard is hidden (▼ or BACK) while a
+  text field keeps focus, the D-pad and pad buttons go to the app again, so a list under a search
+  field can be moved with the pad. RuneBoard kept taking them until the field lost focus.
+- **Its own name**: installs as `io.github.doctorutsugi.dualkeyboard` and shows as "Utsugi Dual
+  Keyboard" in Android's keyboard list, so it can sit next to RuneBoard. Moving from RuneBoard
+  keeps your settings if you copy `shared_prefs/runeboard_preferences.xml` across.
 
 ---
 

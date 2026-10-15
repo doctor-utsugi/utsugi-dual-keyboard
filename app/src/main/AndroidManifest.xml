@@ -5,11 +5,11 @@
 
     <application
         android:dataExtractionRules="@xml/data_extraction_rules"
-        android:icon="@drawable/ic_runeboard"
-        android:roundIcon="@drawable/ic_runeboard"
+        android:icon="@drawable/ic_dualkeyboard"
+        android:roundIcon="@drawable/ic_dualkeyboard"
         android:label="@string/app_name"
         android:supportsRtl="true"
-        android:theme="@style/Theme.RuneBoard">
+        android:theme="@style/Theme.DualKeyboard">
 
         <activity
             android:name=".MainActivity"
@@ -21,12 +21,12 @@
         </activity>
 
         <service
-            android:name=".RuneBoardImeService"
+            android:name=".DualKeyboardImeService"
             android:directBootAware="true"
             android:exported="true"
             android:label="@string/ime_name"
             android:permission="android.permission.BIND_INPUT_METHOD"
-            android:theme="@style/Theme.RuneBoard.IME">
+            android:theme="@style/Theme.DualKeyboard.IME">
             <intent-filter>
                 <action android:name="android.view.InputMethod" />
             </intent-filter>
@@ -37,7 +37,7 @@
         </service>
 
         <service
-            android:name=".RuneBoardControlService"
+            android:name=".DualKeyboardControlService"
             android:exported="true"
             android:label="@string/control_service_name"
             android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">

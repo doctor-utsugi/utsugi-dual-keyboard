@@ -1,0 +1,353 @@
+package io.github.doctorutsugi.dualkeyboard.keyboard;
+
+import io.github.doctorutsugi.dualkeyboard.theme.BackgroundOpacity;
+
+public final class KeyboardState {
+
+    public enum ShiftMode {
+        OFF,
+        AUTO,
+        ONCE,
+        CAPS_LOCK
+    }
+
+    public enum Mode {
+        ALPHABET,
+        SYMBOLS,
+        EDIT
+    }
+
+    private final KeyboardLayout alphabetLayout;
+    private final KeyboardLayout symbolLayout;
+    private final KeyboardLayout editorLayout;
+    private KeyboardLayout layout;
+    private Mode mode = Mode.ALPHABET;
+    private int selectedRow;
+    private int selectedCol;
+    private ShiftMode shiftMode = ShiftMode.OFF;
+    private boolean autoShiftRequested;
+    private boolean minimized;
+    private int opacity;
+
+    public KeyboardState(KeyboardLayout layout) {
+        this(
+                layout,
+                layout,
+                layout,
+                BackgroundOpacity.defaultValue());
+    }
+
+    public KeyboardState(
+            KeyboardLayout layout,
+            int initialOpacity) {
+        this(layout, layout, layout, initialOpacity);
+    }
+
+    public KeyboardState(
+            KeyboardLayout alphabetLayout,
+            KeyboardLayout symbolLayout,
+            int initialOpacity) {
+        this(
+                alphabetLayout,
+                symbolLayout,
+                alphabetLayout,
+                initialOpacity);
+    }
+
+    public KeyboardState(
+            KeyboardLayout alphabetLayout,
+            KeyboardLayout symbolLayout,
+            KeyboardLayout editorLayout,
+            int initialOpacity) {
+        if (alphabetLayout == null
+                || symbolLayout == null
+                || editorLayout == null) {
+            throw new IllegalArgumentException("Layouts cannot be null");
+        }
+        this.alphabetLayout = alphabetLayout;
+        this.symbolLayout = symbolLayout;
+        this.editorLayout = editorLayout;
+        this.layout = alphabetLayout;
+        opacity = BackgroundOpacity.normalize(initialOpacity);
+        selectInitialTypingKey();
+    }
+
+    private void selectInitialTypingKey() {
+        for (int row = 1; row < layout.getRowCount(); row++) {
+            KeyboardRow keyboardRow = layout.getRow(row);
+            for (int col = 0; col < keyboardRow.size(); col++) {
+                KeyboardKey key = keyboardRow.getKey(col);
+                if (key.getType() == KeyboardKey.Type.TEXT
+                        && !Character.isDigit(key.getText().codePointAt(0))) {
+                    selectedRow = row;
+                    selectedCol = col;
+                    return;
+                }
+            }
+        }
+
+        selectedRow = 0;
+        selectedCol = 0;
+    }
+
+    public KeyboardLayout getLayout() {
+        return layout;
+    }
+
+    public Mode getMode() {
+        return mode;
+    }
+
+    public boolean isSymbols() {
+        return mode == Mode.SYMBOLS;
+    }
+
+    public boolean isEditing() {
+        return mode == Mode.EDIT;
+    }
+
+    public boolean toggleSymbols() {
+        setMode(
+                mode == Mode.SYMBOLS
+                        ? Mode.ALPHABET
+                        : Mode.SYMBOLS,
+                KeyboardKey.Type.MODE);
+        return true;
+    }
+
+    public boolean toggleEditing() {
+        setMode(
+                mode == Mode.EDIT
+                        ? Mode.ALPHABET
+                        : Mode.EDIT,
+                KeyboardKey.Type.EDIT);
+        return true;
+    }
+
+    private void setMode(
+            Mode next,
+            KeyboardKey.Type preferredSelection) {
+        mode = next;
+        switch (mode) {
+            case SYMBOLS:
+                layout = symbolLayout;
+                break;
+            case EDIT:
+                layout = editorLayout;
+                break;
+            case ALPHABET:
+            default:
+                layout = alphabetLayout;
+                break;
+        }
+
+        if (mode != Mode.ALPHABET) {
+            shiftMode = ShiftMode.OFF;
+        } else if (autoShiftRequested) {
+            shiftMode = ShiftMode.AUTO;
+        }
+
+        selectKeyType(preferredSelection);
+    }
+
+    private void selectKeyType(KeyboardKey.Type type) {
+        for (int row = layout.getRowCount() - 1;
+                row >= 0;
+                row--) {
+            KeyboardRow keyboardRow = layout.getRow(row);
+            for (int col = 0; col < keyboardRow.size(); col++) {
+                if (keyboardRow.getKey(col).getType() == type) {
+                    selectedRow = row;
+                    selectedCol = col;
+                    return;
+                }
+            }
+        }
+
+        selectedRow = Math.max(
+                0,
+                Math.min(selectedRow, layout.getRowCount() - 1));
+        selectedCol = Math.max(
+                0,
+                Math.min(
+                        selectedCol,
+                        layout.getRow(selectedRow).size() - 1));
+    }
+
+    public int getSelectedRow() {
+        return selectedRow;
+    }
+
+    public int getSelectedCol() {
+        return selectedCol;
+    }
+
+    public KeyboardKey getSelectedKey() {
+        return layout.getKey(selectedRow, selectedCol);
+    }
+
+    public void select(int row, int col) {
+        if (row < 0 || row >= layout.getRowCount()) {
+            throw new IllegalArgumentException("Invalid row");
+        }
+        if (col < 0 || col >= layout.getRow(row).size()) {
+            throw new IllegalArgumentException("Invalid column");
+        }
+        selectedRow = row;
+        selectedCol = col;
+    }
+
+    public boolean move(int dx, int dy) {
+        if (minimized || (dx == 0 && dy == 0)) {
+            return false;
+        }
+
+        int oldRow = selectedRow;
+        int oldCol = selectedCol;
+
+        if (dy != 0) {
+            int targetRow = Math.max(
+                    0,
+                    Math.min(layout.getRowCount() - 1, selectedRow + dy));
+            if (targetRow != selectedRow) {
+                float center = normalizedCenter(
+                        layout.getRow(selectedRow),
+                        selectedCol);
+                selectedRow = targetRow;
+                selectedCol = closestColumn(
+                        layout.getRow(targetRow),
+                        center);
+            }
+        } else {
+            int size = layout.getRow(selectedRow).size();
+            selectedCol = (selectedCol + dx + size) % size;
+        }
+
+        return oldRow != selectedRow || oldCol != selectedCol;
+    }
+
+    private float normalizedCenter(KeyboardRow row, int column) {
+        float left = row.getLeftInsetWeight();
+        for (int i = 0; i < column; i++) {
+            left += row.getKey(i).getWeight();
+        }
+        return (left + row.getKey(column).getWeight() / 2f)
+                / row.getTotalWidthWeight();
+    }
+
+    private int closestColumn(KeyboardRow row, float targetCenter) {
+        int best = 0;
+        float bestDistance = Float.MAX_VALUE;
+        for (int col = 0; col < row.size(); col++) {
+            float distance =
+                    Math.abs(normalizedCenter(row, col) - targetCenter);
+            if (distance < bestDistance) {
+                best = col;
+                bestDistance = distance;
+            }
+        }
+        return best;
+    }
+
+    public ShiftMode getShiftMode() {
+        return shiftMode;
+    }
+
+    public boolean isShifted() {
+        return shiftMode != ShiftMode.OFF;
+    }
+
+    public boolean isCapsLocked() {
+        return shiftMode == ShiftMode.CAPS_LOCK;
+    }
+
+    public void advanceShiftMode() {
+        if (mode != Mode.ALPHABET) {
+            return;
+        }
+        switch (shiftMode) {
+            case OFF:
+                shiftMode = ShiftMode.ONCE;
+                break;
+            case AUTO:
+                autoShiftRequested = false;
+                shiftMode = ShiftMode.OFF;
+                break;
+            case ONCE:
+                shiftMode = ShiftMode.CAPS_LOCK;
+                break;
+            case CAPS_LOCK:
+                shiftMode = autoShiftRequested
+                        ? ShiftMode.AUTO
+                        : ShiftMode.OFF;
+                break;
+            default:
+                shiftMode = ShiftMode.OFF;
+                break;
+        }
+    }
+
+    public boolean setAutoShifted(boolean shifted) {
+        autoShiftRequested = shifted;
+        if (mode != Mode.ALPHABET
+                || shiftMode == ShiftMode.ONCE
+                || shiftMode == ShiftMode.CAPS_LOCK) {
+            return false;
+        }
+
+        ShiftMode next = shifted ? ShiftMode.AUTO : ShiftMode.OFF;
+        if (next == shiftMode) {
+            return false;
+        }
+        shiftMode = next;
+        return true;
+    }
+
+    public boolean resetShiftMode() {
+        autoShiftRequested = false;
+        if (shiftMode == ShiftMode.OFF) {
+            return false;
+        }
+        shiftMode = ShiftMode.OFF;
+        return true;
+    }
+
+    public boolean consumeOneShotShift() {
+        if (shiftMode == ShiftMode.ONCE) {
+            shiftMode = autoShiftRequested
+                    ? ShiftMode.AUTO
+                    : ShiftMode.OFF;
+            return true;
+        }
+        if (shiftMode == ShiftMode.AUTO) {
+            autoShiftRequested = false;
+            shiftMode = ShiftMode.OFF;
+            return true;
+        }
+        return false;
+    }
+
+    public boolean isMinimized() {
+        return minimized;
+    }
+
+    public boolean setMinimized(boolean minimized) {
+        if (this.minimized == minimized) {
+            return false;
+        }
+        this.minimized = minimized;
+        return true;
+    }
+
+    public int getOpacity() {
+        return opacity;
+    }
+
+    public int getOpacityPercent() {
+        return BackgroundOpacity.percent(opacity);
+    }
+
+    public void cycleOpacity() {
+        opacity = BackgroundOpacity.next(opacity);
+    }
+}
