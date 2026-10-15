@@ -28,6 +28,11 @@
 - **Its own name**: installs as `io.github.doctorutsugi.dualkeyboard` and shows as "Utsugi Dual
   Keyboard" in Android's keyboard list, so it can sit next to RuneBoard. Moving from RuneBoard
   keeps your settings if you copy `shared_prefs/runeboard_preferences.xml` across.
+- **Release signing**: `./gradlew assembleRelease` signs with the key in
+  `~/.android/utsugi-dual-keyboard-release.jks` (password in the `.pass` file next to it), or the one
+  `UTSUGI_KEYSTORE` / `UTSUGI_KEYSTORE_PASSWORD` point at. Without the key the release APK is left
+  unsigned. Releases from 0.24.0 on use this key; 0.23.0 was debug-signed, so moving from it means
+  uninstalling it once.
 
 ---
 
